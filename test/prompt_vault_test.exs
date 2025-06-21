@@ -311,14 +311,14 @@ defmodule PromptVaultTest do
     end
 
     test "returns cached count when available" do
-      context = PromptVault.new(token_counter: PromptVault.TokenCounter.Tiktoken)
+      context = PromptVault.new(token_counter: PromptVault.TokenCounter.PretendTokenizer)
       context_with_cache = %{context | token_count: 42}
 
       assert PromptVault.token_count(context_with_cache) == {:ok, 42}
     end
 
     test "counts tokens using configured counter" do
-      context = PromptVault.new(token_counter: PromptVault.TokenCounter.Tiktoken)
+      context = PromptVault.new(token_counter: PromptVault.TokenCounter.PretendTokenizer)
       {:ok, context} = PromptVault.add_message(context, :user, "Hello world")
 
       {:ok, count} = PromptVault.token_count(context)
@@ -334,7 +334,7 @@ defmodule PromptVaultTest do
     end
 
     test "counts and caches tokens" do
-      context = PromptVault.new(token_counter: PromptVault.TokenCounter.Tiktoken)
+      context = PromptVault.new(token_counter: PromptVault.TokenCounter.PretendTokenizer)
       {:ok, context} = PromptVault.add_message(context, :user, "Hello world")
 
       assert context.token_count == 0
@@ -345,7 +345,7 @@ defmodule PromptVaultTest do
     end
 
     test "works with multiple messages" do
-      context = PromptVault.new(token_counter: PromptVault.TokenCounter.Tiktoken)
+      context = PromptVault.new(token_counter: PromptVault.TokenCounter.PretendTokenizer)
       {:ok, context} = PromptVault.add_message(context, :system, "You are helpful")
       {:ok, context} = PromptVault.add_message(context, :user, "Hello there!")
 
@@ -427,7 +427,7 @@ defmodule PromptVaultTest do
       context =
         PromptVault.new(
           compaction_strategy: PromptVault.Compaction.SummarizeHistory,
-          token_counter: PromptVault.TokenCounter.Tiktoken
+          token_counter: PromptVault.TokenCounter.PretendTokenizer
         )
 
       {:ok, context} = PromptVault.add_message(context, :user, "Hello")

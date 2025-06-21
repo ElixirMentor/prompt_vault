@@ -20,7 +20,7 @@ defmodule PromptVaultIntegrationTest do
           model: :gpt4,
           temperature: 0.7,
           max_tokens: 1000,
-          token_counter: PromptVault.TokenCounter.Tiktoken,
+          token_counter: PromptVault.TokenCounter.PretendTokenizer,
           compaction_strategy: {SummarizeHistory, [summarizer: summarizer]}
         )
 
@@ -132,7 +132,7 @@ defmodule PromptVaultIntegrationTest do
     test "pipe-friendly API usage" do
       result =
         PromptVault.new(
-          token_counter: PromptVault.TokenCounter.Tiktoken,
+          token_counter: PromptVault.TokenCounter.PretendTokenizer,
           compaction_strategy: SummarizeHistory
         )
         |> PromptVault.add_message(:system, "You are helpful")
