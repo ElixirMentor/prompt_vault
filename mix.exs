@@ -19,6 +19,7 @@ defmodule PromptVault.MixProject do
       homepage_url: "https://github.com/ElixirMentor/prompt_vault",
       package: package(),
       docs: docs(),
+      aliases: aliases(),
 
       # Coverage
       test_coverage: [
@@ -120,6 +121,20 @@ defmodule PromptVault.MixProject do
         Compaction: [
           PromptVault.Compaction.SummarizeHistory
         ]
+      ]
+    ]
+  end
+
+  defp aliases do
+    [
+      # Run to check the quality of your code
+      q: ["quality"],
+      quality: [
+        "format",
+        "format --check-formatted",
+        "compile --warnings-as-errors",
+        "dialyzer --format dialyxir",
+        "credo --all"
       ]
     ]
   end

@@ -26,7 +26,7 @@ defmodule PromptVault.Compaction.SummarizeHistoryTest do
       {:ok, result} = SummarizeHistory.compact(context, summarizer: summarizer)
 
       assert result == context
-      assert length(result.messages) == 0
+      assert Enum.empty?(result.messages)
     end
 
     test "returns context unchanged when only system messages" do
