@@ -1,0 +1,1 @@
+These plans were generated on the Elixir Mentor livestream to showcase different ways to build a PRD.

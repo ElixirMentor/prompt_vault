@@ -71,7 +71,7 @@ If `template == nil`, `raw` is used verbatim.
 
 | Behaviour          | Callback(s)                                 | Default                                            |                                           |
 | ------------------ | ------------------------------------------- | -------------------------------------------------- | ----------------------------------------- |
-| **TokenCounter**   | `count(model, iodata) :: non_neg_integer`   | `PromptVault.TokenCounter.Tiktoken` (optional dep) |                                           |
+| **TokenCounter**   | `count(model, iodata) :: non_neg_integer`   | `PromptVault.TokenCounter.PretendTokenizer` (optional dep) |                                           |
 | **Compaction**     | \`compact(context, opts) :: {\:ok, context} | {\:error, reason}\`                                | `PromptVault.Compaction.SummarizeHistory` |
 | **TemplateEngine** | `render(template_src, assigns) :: iodata`   | `EExEngine`, `LiquidEngine`                        |                                           |
 

@@ -63,7 +63,7 @@ PromptVault is a utility package that provides an immutable, token-aware context
    - Create mock token counter for tests
 
 9. **Default Token Counter**
-   - Implement `PromptVault.TokenCounter.Tiktoken`
+   - Implement `PromptVault.TokenCounter.PretendTokenizer`
    - Handle optional dependency gracefully
    - Add fallback behavior
 

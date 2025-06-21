@@ -237,7 +237,7 @@ defmodule PromptVault do
 
   ## Examples
 
-      iex> context = PromptVault.new(token_counter: PromptVault.TokenCounter.Tiktoken)
+      iex> context = PromptVault.new(token_counter: PromptVault.TokenCounter.PretendTokenizer)
       iex> {:ok, context} = PromptVault.add_message(context, :user, "Hello")
       iex> {:ok, count} = PromptVault.token_count(context)
       iex> count >= 0
@@ -261,7 +261,7 @@ defmodule PromptVault do
 
   ## Examples
 
-      iex> context = PromptVault.new(token_counter: PromptVault.TokenCounter.Tiktoken)
+      iex> context = PromptVault.new(token_counter: PromptVault.TokenCounter.PretendTokenizer)
       iex> {:ok, context} = PromptVault.add_message(context, :user, "Hello")
       iex> {:ok, updated_context} = PromptVault.count_and_cache_tokens(context)
       iex> updated_context.token_count >= 0
