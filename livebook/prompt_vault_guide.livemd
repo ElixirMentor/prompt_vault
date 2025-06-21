@@ -1,0 +1,365 @@
+# PromptVault Interactive Guide
+
+```elixir
+Mix.install([
+  {:prompt_vault, "~> 0.1.0"}
+])
+```
+
+## Introduction
+
+Welcome to PromptVault! This interactive guide will walk you through all the features and capabilities of PromptVault, an Elixir toolkit for managing and processing prompts with context, templates, and token counting for LLM applications.
+
+PromptVault provides an **immutable, token-aware context management system** that helps you build robust LLM prompt pipelines.
+
+## Core Features Overview
+
+* **Context Management**: Immutable context with message history
+* **Token Counting**: Built-in token counting with pluggable tokenizers
+* **Template Support**: EEx and Liquid template engines
+* **Message Types**: Support for text, tool calls, and media messages
+* **Compaction Strategies**: Automatic context compaction when approaching token limits
+* **Type Safety**: Full Elixir typespecs and documentation
+
+<!-- livebook:{"break_markdown":true} -->
+
+## 1. Getting Started - Creating Your First Context
+
+Let's start by creating a basic context and adding some messages:
+
+```elixir
+# Create a new context with configuration
+context = PromptVault.new(
+  model: :gpt4,
+  temperature: 0.7,
+  token_counter: PromptVault.TokenCounter.PretendTokenizer
+)
+
+IO.inspect(context, label: "Initial Context")
+```
+
+```elixir
+# Add a system message
+{:ok, context} = PromptVault.add_message(context, :system, "You are a helpful assistant")
+
+# Add a user message
+{:ok, context} = PromptVault.add_message(context, :user, "Hello! Can you help me understand PromptVault?")
+
+# Check the messages
+IO.inspect(context.messages, label: "Messages in Context")
+```
+
+## 2. Token Counting
+
+One of PromptVault's key features is built-in token counting to help you manage LLM token limits:
+
+```elixir
+# Count tokens in the current context
+{:ok, token_count} = PromptVault.token_count(context)
+IO.puts("Current token count: #{token_count}")
+
+# You can also count tokens for individual messages
+{:ok, message_tokens} = PromptVault.token_count(context, "This is a test message")
+IO.puts("Token count for test message: #{message_tokens}")
+```
+
+## 3. Message Types
+
+PromptVault supports three different types of messages:
+
+### Text Messages
+
+```elixir
+# Basic text messages with different roles
+{:ok, context} = PromptVault.add_message(context, :user, "What's the weather like today?")
+{:ok, context} = PromptVault.add_message(context, :assistant, "I'd be happy to help you check the weather!")
+
+IO.inspect(length(context.messages), label: "Total messages")
+```
+
+### Tool Call Messages
+
+```elixir
+# Add a tool call message
+{:ok, context} = PromptVault.add_tool_call(
+  context,
+  :get_weather,
+  %{city: "New York", units: "celsius"},
+  %{
+    type: "object",
+    properties: %{
+      temperature: %{type: "number"},
+      condition: %{type: "string"}
+    }
+  }
+)
+
+# The last message should be a tool call
+IO.inspect(List.last(context.messages), label: "Tool Call Message")
+```
+
+### Media Messages
+
+```elixir
+# Add a media message (like an image)
+{:ok, context} = PromptVault.add_media(
+  context,
+  "image/jpeg",
+  "https://example.com/weather-map.jpg"
+)
+
+IO.inspect(List.last(context.messages), label: "Media Message")
+```
+
+## 4. Templates and Dynamic Content
+
+PromptVault supports templates for dynamic content generation:
+
+### EEx Templates (Default)
+
+```elixir
+# Create a context for template examples
+template_context = PromptVault.new(
+  model: :gpt4,
+  token_counter: PromptVault.TokenCounter.PretendTokenizer
+)
+
+# Add a templated message
+{:ok, template_context} = PromptVault.add_message(
+  template_context,
+  :user,
+  "Hello <%= @name %>! Today is <%= @day %> and the temperature is <%= @temp %>°C.",
+  template: true,
+  assigns: %{
+    name: "Alice",
+    day: "Monday", 
+    temp: 22
+  }
+)
+
+# Render the context to see the templated content
+rendered = PromptVault.render(template_context)
+IO.inspect(rendered, label: "Rendered Template")
+```
+
+### Liquid Templates
+
+```elixir
+# Using Liquid template engine (if available)
+{:ok, liquid_context} = PromptVault.add_message(
+  template_context,
+  :assistant,
+  "Hi {{ user.name }}! The weather forecast shows {{ weather.condition }}.",
+  template: true,
+  template_engine: PromptVault.TemplateEngine.LiquidEngine,
+  assigns: %{
+    user: %{name: "Bob"},
+    weather: %{condition: "sunny skies"}
+  }
+)
+
+rendered_liquid = PromptVault.render(liquid_context)
+IO.inspect(rendered_liquid, label: "Rendered Liquid Template")
+```
+
+## 5. Context Configuration Options
+
+PromptVault contexts are highly configurable:
+
+```elixir
+# Create a context with all available options
+advanced_context = PromptVault.new(
+  model: :gpt4,                               # LLM model identifier
+  temperature: 0.7,                           # Model temperature (0.0 - 2.0)
+  max_tokens: 4000,                          # Maximum token limit
+  token_counter: PromptVault.TokenCounter.PretendTokenizer,
+  compaction_strategy: PromptVault.Compaction.SummarizeHistory,
+  template_engine: PromptVault.TemplateEngine.EExEngine
+)
+
+IO.inspect(advanced_context, label: "Advanced Context Configuration")
+```
+
+## 6. Context Compaction
+
+When your context approaches token limits, PromptVault can automatically compact it:
+
+```elixir
+# Create a context with a low token limit to demonstrate compaction
+compact_context = PromptVault.new(
+  model: :gpt3_5_turbo,
+  max_tokens: 100,  # Very low limit for demonstration
+  token_counter: PromptVault.TokenCounter.PretendTokenizer,
+  compaction_strategy: PromptVault.Compaction.SummarizeHistory
+)
+
+# Add several messages to exceed the limit
+{:ok, compact_context} = PromptVault.add_message(compact_context, :system, "You are a helpful assistant that provides detailed explanations.")
+{:ok, compact_context} = PromptVault.add_message(compact_context, :user, "Tell me about the history of computers.")
+{:ok, compact_context} = PromptVault.add_message(compact_context, :assistant, "The history of computers spans several centuries...")
+{:ok, compact_context} = PromptVault.add_message(compact_context, :user, "What about modern smartphones?")
+
+# Check token count before compaction
+{:ok, before_tokens} = PromptVault.token_count(compact_context)
+IO.puts("Tokens before compaction: #{before_tokens}")
+
+# Compact the context
+{:ok, compacted_context} = PromptVault.compact(compact_context)
+
+# Check token count after compaction
+{:ok, after_tokens} = PromptVault.token_count(compacted_context)
+IO.puts("Tokens after compaction: #{after_tokens}")
+
+IO.inspect(length(compacted_context.messages), label: "Messages after compaction")
+```
+
+## 7. Working with Context Immutability
+
+PromptVault contexts are immutable, which means every operation returns a new context:
+
+```elixir
+# Demonstrate immutability
+original_context = PromptVault.new(model: :gpt4)
+
+# Adding a message returns a NEW context
+{:ok, new_context} = PromptVault.add_message(original_context, :user, "Hello!")
+
+# Original context is unchanged
+IO.inspect(length(original_context.messages), label: "Original context messages")
+IO.inspect(length(new_context.messages), label: "New context messages")
+
+# This ensures thread safety and prevents accidental mutations
+IO.puts("Contexts are immutable - operations return new instances!")
+```
+
+## 8. Error Handling
+
+PromptVault uses Elixir's standard `{:ok, result} | {:error, reason}` pattern:
+
+```elixir
+# Example of error handling
+case PromptVault.add_message(context, :invalid_role, "This will fail") do
+  {:ok, updated_context} -> 
+    IO.puts("Message added successfully")
+    
+  {:error, reason} -> 
+    IO.puts("Error: #{inspect(reason)}")
+end
+
+# Token counting errors
+case PromptVault.token_count(context, nil) do
+  {:ok, count} -> 
+    IO.puts("Token count: #{count}")
+    
+  {:error, reason} -> 
+    IO.puts("Token counting error: #{inspect(reason)}")
+end
+```
+
+## 9. Rendering Final Prompts
+
+Convert your context to the final format for your LLM:
+
+```elixir
+# Create a simple context for rendering
+render_context = PromptVault.new(model: :gpt4)
+{:ok, render_context} = PromptVault.add_message(render_context, :system, "You are a helpful coding assistant.")
+{:ok, render_context} = PromptVault.add_message(render_context, :user, "Explain recursion in programming.")
+
+# Render to string format
+rendered_string = PromptVault.render(render_context)
+IO.puts("Rendered context:")
+IO.puts(rendered_string)
+
+# Render with options
+rendered_with_options = PromptVault.render(render_context, format: :openai)
+IO.inspect(rendered_with_options, label: "OpenAI format")
+```
+
+## 10. Best Practices
+
+Here are some best practices when using PromptVault:
+
+```elixir
+# 1. Always handle the {:ok, context} | {:error, reason} returns
+defmodule MyApp.PromptHelper do
+  def safe_add_message(context, role, content) do
+    case PromptVault.add_message(context, role, content) do
+      {:ok, new_context} -> new_context
+      {:error, reason} -> 
+        IO.puts("Failed to add message: #{inspect(reason)}")
+        context  # Return original context on error
+    end
+  end
+  
+  # 2. Monitor token usage
+  def check_token_usage(context, warn_threshold \\ 0.8) do
+    case PromptVault.token_count(context) do
+      {:ok, count} ->
+        max_tokens = context.max_tokens || 4096
+        usage_ratio = count / max_tokens
+        
+        if usage_ratio > warn_threshold do
+          IO.puts("Warning: Token usage at #{round(usage_ratio * 100)}%")
+        end
+        
+        count
+        
+      {:error, _} -> 0
+    end
+  end
+  
+  # 3. Use compaction proactively
+  def smart_add_message(context, role, content) do
+    # Check if we need compaction before adding
+    {:ok, current_tokens} = PromptVault.token_count(context)
+    {:ok, message_tokens} = PromptVault.token_count(context, content)
+    
+    total_tokens = current_tokens + message_tokens
+    max_tokens = context.max_tokens || 4096
+    
+    context = if total_tokens > max_tokens * 0.9 do
+      {:ok, compacted} = PromptVault.compact(context)
+      compacted
+    else
+      context
+    end
+    
+    PromptVault.add_message(context, role, content)
+  end
+end
+
+# Test the helper functions
+test_context = PromptVault.new(
+  model: :gpt4,
+  max_tokens: 1000,
+  token_counter: PromptVault.TokenCounter.PretendTokenizer
+)
+
+updated_context = MyApp.PromptHelper.safe_add_message(test_context, :user, "Hello!")
+token_count = MyApp.PromptHelper.check_token_usage(updated_context)
+
+IO.puts("Best practices demonstration completed!")
+```
+
+## Summary
+
+PromptVault provides a comprehensive solution for managing LLM prompts in Elixir applications. Key takeaways:
+
+1. **Immutable Context**: Every operation returns a new context, ensuring thread safety
+2. **Token Awareness**: Built-in token counting helps you stay within LLM limits  
+3. **Flexible Templates**: Support for both EEx and Liquid templates
+4. **Multiple Message Types**: Text, tool calls, and media messages
+5. **Automatic Compaction**: Strategies to manage context size
+6. **Type Safety**: Full typespecs and error handling
+
+PromptVault makes it easy to build robust, production-ready LLM applications in Elixir!
+
+<!-- livebook:{"break_markdown":true} -->
+
+## Next Steps
+
+- Explore the [PromptVault documentation](https://hexdocs.pm/prompt_vault)
+- Check out the [GitHub repository](https://github.com/ElixirMentor/prompt_vault)
+- Try building your own LLM application with PromptVault
+- Experiment with custom token counters and compaction strategies
