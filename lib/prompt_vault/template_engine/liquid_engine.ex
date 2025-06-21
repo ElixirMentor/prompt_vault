@@ -37,63 +37,61 @@ defmodule PromptVault.TemplateEngine.LiquidEngine do
     do: {:error, {:invalid_template_source, template_source}}
 
   defp do_render({:inline, template}, assigns) when is_binary(template) do
-    try do
-      case Solid.parse(template) do
-        {:ok, parsed} ->
-          string_assigns = convert_assigns_to_strings(assigns)
+    case Solid.parse(template) do
+      {:ok, parsed} ->
+        string_assigns = convert_assigns_to_strings(assigns)
 
-          case Solid.render(parsed, string_assigns) do
-            {:ok, result} -> {:ok, IO.iodata_to_binary(result)}
-            {:error, reason} -> {:error, {:render_error, reason}}
-          end
+        case Solid.render(parsed, string_assigns) do
+          {:ok, result} -> {:ok, IO.iodata_to_binary(result)}
+          {:error, reason} -> {:error, {:render_error, reason}}
+        end
 
-        {:error, reason} ->
-          {:error, {:parse_error, reason}}
-      end
-    rescue
-      exception ->
-        {:error, exception}
+      {:error, reason} ->
+        {:error, {:parse_error, reason}}
     end
+  rescue
+    exception ->
+      {:error, exception}
   end
 
   defp do_render({:file, file_path}, assigns) when is_binary(file_path) do
-    try do
-      case File.read(file_path) do
-        {:ok, content} ->
-          case Solid.parse(content) do
-            {:ok, parsed} ->
-              string_assigns = convert_assigns_to_strings(assigns)
+    case File.read(file_path) do
+      {:ok, content} ->
+        render_liquid_content(content, assigns)
 
-              case Solid.render(parsed, string_assigns) do
-                {:ok, result} -> {:ok, IO.iodata_to_binary(result)}
-                {:error, reason} -> {:error, {:render_error, reason}}
-              end
+      {:error, reason} ->
+        {:error, {:file_error, reason}}
+    end
+  rescue
+    exception ->
+      {:error, exception}
+  end
 
-            {:error, reason} ->
-              {:error, {:parse_error, reason}}
-          end
+  defp render_liquid_content(content, assigns) do
+    case Solid.parse(content) do
+      {:ok, parsed} ->
+        string_assigns = convert_assigns_to_strings(assigns)
 
-        {:error, reason} ->
-          {:error, {:file_error, reason}}
-      end
-    rescue
-      exception ->
-        {:error, exception}
+        case Solid.render(parsed, string_assigns) do
+          {:ok, result} -> {:ok, IO.iodata_to_binary(result)}
+          {:error, reason} -> {:error, {:render_error, reason}}
+        end
+
+      {:error, reason} ->
+        {:error, {:parse_error, reason}}
     end
   end
 
   defp do_render({:module, module}, assigns) when is_atom(module) do
-    try do
-      if function_exported?(module, :render, 1) do
-        result = module.render(assigns)
-        {:ok, result}
-      else
-        {:error, {:no_render_function, module}}
-      end
-    rescue
-      exception ->
-        {:error, exception}
+    if function_exported?(module, :render, 1) do
+      result = module.render(assigns)
+      {:ok, result}
+    else
+      {:error, {:no_render_function, module}}
     end
+  rescue
+    exception ->
+      {:error, exception}
   end
 
   defp do_render(template_source, _assigns) do

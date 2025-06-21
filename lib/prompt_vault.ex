@@ -13,7 +13,7 @@ defmodule PromptVault do
   """
 
   alias PromptVault.Context
-  alias PromptVault.Message.{PromptMessage, ToolCallMessage, MediaMessage}
+  alias PromptVault.Message.{MediaMessage, PromptMessage, ToolCallMessage}
 
   @doc """
   Creates a new PromptVault context with the given options.

@@ -2,7 +2,7 @@ defmodule PromptVaultTest do
   use ExUnit.Case
   doctest PromptVault
 
-  alias PromptVault.Message.{PromptMessage, ToolCallMessage, MediaMessage}
+  alias PromptVault.Message.{MediaMessage, PromptMessage, ToolCallMessage}
 
   test "creates new context" do
     context = PromptVault.new()
