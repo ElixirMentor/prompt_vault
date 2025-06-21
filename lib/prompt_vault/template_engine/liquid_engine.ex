@@ -67,21 +67,6 @@ defmodule PromptVault.TemplateEngine.LiquidEngine do
       {:error, exception}
   end
 
-  defp render_liquid_content(content, assigns) do
-    case Solid.parse(content) do
-      {:ok, parsed} ->
-        string_assigns = convert_assigns_to_strings(assigns)
-
-        case Solid.render(parsed, string_assigns) do
-          {:ok, result} -> {:ok, IO.iodata_to_binary(result)}
-          {:error, reason} -> {:error, {:render_error, reason}}
-        end
-
-      {:error, reason} ->
-        {:error, {:parse_error, reason}}
-    end
-  end
-
   defp do_render({:module, module}, assigns) when is_atom(module) do
     if function_exported?(module, :render, 1) do
       result = module.render(assigns)
@@ -96,6 +81,21 @@ defmodule PromptVault.TemplateEngine.LiquidEngine do
 
   defp do_render(template_source, _assigns) do
     {:error, {:invalid_template_source, template_source}}
+  end
+
+  defp render_liquid_content(content, assigns) do
+    case Solid.parse(content) do
+      {:ok, parsed} ->
+        string_assigns = convert_assigns_to_strings(assigns)
+
+        case Solid.render(parsed, string_assigns) do
+          {:ok, result} -> {:ok, IO.iodata_to_binary(result)}
+          {:error, reason} -> {:error, {:render_error, reason}}
+        end
+
+      {:error, reason} ->
+        {:error, {:parse_error, reason}}
+    end
   end
 
   # Solid expects string keys in assigns, so convert atom keys to strings
