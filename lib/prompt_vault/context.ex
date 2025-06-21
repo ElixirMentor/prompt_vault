@@ -53,12 +53,13 @@ defimpl Inspect, for: PromptVault.Context do
   defp add_if_present(parts, _key, []), do: parts
 
   defp add_if_present(parts, key, value) do
-    formatted = 
+    formatted =
       if String.contains?(key, "≈") do
         "#{key}#{value}"
       else
         "#{key}=#{value}"
       end
+
     parts ++ [formatted]
   end
 end

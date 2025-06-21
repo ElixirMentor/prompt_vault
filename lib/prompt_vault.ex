@@ -145,7 +145,13 @@ defmodule PromptVault do
       1
 
   """
-  @spec add_tool_call(Context.t(), atom() | String.t(), map(), map() | String.t() | nil, keyword()) ::
+  @spec add_tool_call(
+          Context.t(),
+          atom() | String.t(),
+          map(),
+          map() | String.t() | nil,
+          keyword()
+        ) ::
           {:ok, Context.t()} | {:error, reason :: any()}
   def add_tool_call(context, tool, args, response_schema, opts \\ [])
 
@@ -246,7 +252,7 @@ defmodule PromptVault do
   def token_count(%Context{} = context) do
     rendered = render(context)
     count = context.token_counter.count(context.model || :gpt4, rendered)
-    
+
     {:ok, count}
   end
 
@@ -268,7 +274,7 @@ defmodule PromptVault do
   def count_and_cache_tokens(%Context{} = context) do
     rendered = render(context)
     count = context.token_counter.count(context.model || :gpt4, rendered)
-    
+
     updated_context = %{context | token_count: count}
     {:ok, updated_context}
   end
@@ -326,7 +332,8 @@ defmodule PromptVault do
     {:error, :no_compaction_strategy}
   end
 
-  def compact(%Context{compaction_strategy: strategy} = context, nil, opts) when is_atom(strategy) do
+  def compact(%Context{compaction_strategy: strategy} = context, nil, opts)
+      when is_atom(strategy) do
     strategy.compact(context, opts)
   end
 

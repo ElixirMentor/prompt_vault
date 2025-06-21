@@ -1,8 +1,8 @@
 defmodule PromptVault.TemplateEngine.LiquidEngine do
   @moduledoc """
-  Liquid template engine implementation for PromptVault.
+  Liquid template engine implementation for PromptVault using Solid.
 
-  This engine requires the optional `liquid` dependency to be available.
+  This engine requires the optional `solid` dependency to be available.
   If not available, all render calls will return an error.
 
   Supports the same template source formats as EExEngine:
@@ -15,19 +15,37 @@ defmodule PromptVault.TemplateEngine.LiquidEngine do
 
   @impl true
   def render(template_source, assigns) do
-    if Code.ensure_loaded?(Liquid) do
-      do_render(template_source, assigns)
-    else
-      {:error, :liquid_not_available}
+    # Validate template source format first
+    case validate_template_source(template_source) do
+      :ok ->
+        if Code.ensure_loaded?(Solid) do
+          do_render(template_source, assigns)
+        else
+          {:error, :liquid_not_available}
+        end
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
+  defp validate_template_source({:inline, template}) when is_binary(template), do: :ok
+  defp validate_template_source({:file, file_path}) when is_binary(file_path), do: :ok
+  defp validate_template_source({:module, module}) when is_atom(module), do: :ok
+
+  defp validate_template_source(template_source),
+    do: {:error, {:invalid_template_source, template_source}}
+
   defp do_render({:inline, template}, assigns) when is_binary(template) do
     try do
-      case Liquid.parse(template) do
+      case Solid.parse(template) do
         {:ok, parsed} ->
-          result = Liquid.render(parsed, assigns)
-          {:ok, result}
+          string_assigns = convert_assigns_to_strings(assigns)
+
+          case Solid.render(parsed, string_assigns) do
+            {:ok, result} -> {:ok, IO.iodata_to_binary(result)}
+            {:error, reason} -> {:error, {:render_error, reason}}
+          end
 
         {:error, reason} ->
           {:error, {:parse_error, reason}}
@@ -42,10 +60,14 @@ defmodule PromptVault.TemplateEngine.LiquidEngine do
     try do
       case File.read(file_path) do
         {:ok, content} ->
-          case Liquid.parse(content) do
+          case Solid.parse(content) do
             {:ok, parsed} ->
-              result = Liquid.render(parsed, assigns)
-              {:ok, result}
+              string_assigns = convert_assigns_to_strings(assigns)
+
+              case Solid.render(parsed, string_assigns) do
+                {:ok, result} -> {:ok, IO.iodata_to_binary(result)}
+                {:error, reason} -> {:error, {:render_error, reason}}
+              end
 
             {:error, reason} ->
               {:error, {:parse_error, reason}}
@@ -77,4 +99,18 @@ defmodule PromptVault.TemplateEngine.LiquidEngine do
   defp do_render(template_source, _assigns) do
     {:error, {:invalid_template_source, template_source}}
   end
+
+  # Solid expects string keys in assigns, so convert atom keys to strings
+  defp convert_assigns_to_strings(assigns) when is_map(assigns) do
+    for {key, value} <- assigns, into: %{} do
+      string_key = if is_atom(key), do: Atom.to_string(key), else: key
+      {string_key, convert_assigns_to_strings(value)}
+    end
+  end
+
+  defp convert_assigns_to_strings(assigns) when is_list(assigns) do
+    Enum.map(assigns, &convert_assigns_to_strings/1)
+  end
+
+  defp convert_assigns_to_strings(assigns), do: assigns
 end

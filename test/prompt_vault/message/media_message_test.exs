@@ -19,7 +19,7 @@ defmodule PromptVault.Message.MediaMessageTest do
 
     test "creates with all fields" do
       assigns = %{alt_text: "A beautiful sunset"}
-      
+
       message = %MediaMessage{
         mime_type: "image/png",
         url: "https://cdn.example.com/sunset.png",
@@ -27,7 +27,7 @@ defmodule PromptVault.Message.MediaMessageTest do
         template: {:inline, "Image: {{alt_text}}"},
         engine: :eex,
         assigns: assigns,
-        size: 2048576
+        size: 2_048_576
       }
 
       assert message.role == :media
@@ -37,7 +37,7 @@ defmodule PromptVault.Message.MediaMessageTest do
       assert message.template == {:inline, "Image: {{alt_text}}"}
       assert message.engine == :eex
       assert message.assigns == assigns
-      assert message.size == 2048576
+      assert message.size == 2_048_576
     end
 
     test "enforces required keys" do
@@ -63,10 +63,11 @@ defmodule PromptVault.Message.MediaMessageTest do
 
     test "raw/1 returns the raw content" do
       message = %MediaMessage{
-        mime_type: "image/jpeg", 
+        mime_type: "image/jpeg",
         url: "test.jpg",
         raw: "description"
       }
+
       assert MediaMessage.raw(message) == "description"
     end
 
@@ -77,19 +78,21 @@ defmodule PromptVault.Message.MediaMessageTest do
 
     test "template_engine/1 returns the engine" do
       message = %MediaMessage{
-        mime_type: "image/jpeg", 
+        mime_type: "image/jpeg",
         url: "test.jpg",
         engine: :liquid
       }
+
       assert MediaMessage.template_engine(message) == :liquid
     end
 
     test "rendered/2 returns raw when no template" do
       message = %MediaMessage{
-        mime_type: "image/jpeg", 
+        mime_type: "image/jpeg",
         url: "test.jpg",
         raw: "A test image"
       }
+
       assert MediaMessage.rendered(message, %{}) == "A test image"
     end
 
@@ -99,8 +102,9 @@ defmodule PromptVault.Message.MediaMessageTest do
         url: "test.jpg",
         template: {:inline, "Image: {{description}}"}
       }
-      
-      assert MediaMessage.rendered(message, %{description: "test"}) == {:error, {:unknown_engine, nil}}
+
+      assert MediaMessage.rendered(message, %{description: "test"}) ==
+               {:error, {:unknown_engine, nil}}
     end
   end
 
@@ -120,10 +124,18 @@ defmodule PromptVault.Message.MediaMessageTest do
       http_msg = %MediaMessage{mime_type: "image/jpeg", url: "http://example.com/image.jpg"}
       assert http_msg.url == "http://example.com/image.jpg"
 
-      https_msg = %MediaMessage{mime_type: "image/jpeg", url: "https://secure.example.com/image.jpg"}
+      https_msg = %MediaMessage{
+        mime_type: "image/jpeg",
+        url: "https://secure.example.com/image.jpg"
+      }
+
       assert https_msg.url == "https://secure.example.com/image.jpg"
 
-      data_url_msg = %MediaMessage{mime_type: "image/jpeg", url: "data:image/jpeg;base64,/9j/4AAQ..."}
+      data_url_msg = %MediaMessage{
+        mime_type: "image/jpeg",
+        url: "data:image/jpeg;base64,/9j/4AAQ..."
+      }
+
       assert data_url_msg.url == "data:image/jpeg;base64,/9j/4AAQ..."
     end
 
@@ -131,8 +143,8 @@ defmodule PromptVault.Message.MediaMessageTest do
       small_msg = %MediaMessage{mime_type: "image/jpeg", url: "small.jpg", size: 1024}
       assert small_msg.size == 1024
 
-      large_msg = %MediaMessage{mime_type: "video/mp4", url: "large.mp4", size: 104857600}
-      assert large_msg.size == 104857600
+      large_msg = %MediaMessage{mime_type: "video/mp4", url: "large.mp4", size: 104_857_600}
+      assert large_msg.size == 104_857_600
     end
   end
 end

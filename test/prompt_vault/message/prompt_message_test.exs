@@ -16,6 +16,7 @@ defmodule PromptVault.Message.PromptMessageTest do
 
     test "creates with optional fields" do
       assigns = %{name: "Alice"}
+
       message = %PromptMessage{
         role: :assistant,
         raw: "Hi {{name}}",
@@ -74,7 +75,7 @@ defmodule PromptVault.Message.PromptMessageTest do
         raw: "test",
         template: {:inline, "Hello {{name}}"}
       }
-      
+
       assert PromptMessage.rendered(message, %{name: "Alice"}) == {:error, {:unknown_engine, nil}}
     end
   end

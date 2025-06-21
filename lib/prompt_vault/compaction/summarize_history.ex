@@ -41,9 +41,9 @@ defmodule PromptVault.Compaction.SummarizeHistory do
   end
 
   defp do_compact(%Context{messages: messages} = context, summarizer) do
-    {system_messages, other_messages} = 
-      Enum.split_with(messages, fn msg -> 
-        msg.__struct__.role(msg) == :system 
+    {system_messages, other_messages} =
+      Enum.split_with(messages, fn msg ->
+        msg.__struct__.role(msg) == :system
       end)
 
     if Enum.empty?(other_messages) do
@@ -52,7 +52,7 @@ defmodule PromptVault.Compaction.SummarizeHistory do
     else
       try do
         summary_text = summarizer.(other_messages)
-        
+
         summary_message = %PromptMessage{
           role: :assistant,
           raw: summary_text,

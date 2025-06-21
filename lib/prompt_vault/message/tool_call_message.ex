@@ -45,14 +45,14 @@ defmodule PromptVault.Message.ToolCallMessage do
 
   def rendered(%__MODULE__{template: template, engine: engine, assigns: msg_assigns}, assigns) do
     merged_assigns = Map.merge(msg_assigns, assigns)
-    
+
     case get_engine_module(engine) do
       {:ok, engine_module} ->
         case engine_module.render(template, merged_assigns) do
           {:ok, result} -> result
           {:error, _reason} = error -> error
         end
-      
+
       {:error, _reason} = error ->
         error
     end

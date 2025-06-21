@@ -21,6 +21,7 @@ defmodule PromptVault.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:solid, "~> 0.15", optional: true},
       {:mimic, "~> 1.7", only: :test}
     ]
   end

@@ -8,17 +8,21 @@ defmodule PromptVaultIntegrationTest do
       # Step 1: Create a context with token counter and compaction strategy
       summarizer = fn messages ->
         user_count = Enum.count(messages, fn msg -> msg.__struct__.role(msg) == :user end)
-        assistant_count = Enum.count(messages, fn msg -> msg.__struct__.role(msg) == :assistant end)
+
+        assistant_count =
+          Enum.count(messages, fn msg -> msg.__struct__.role(msg) == :assistant end)
+
         "Summary: #{user_count} user messages, #{assistant_count} assistant messages"
       end
 
-      context = PromptVault.new(
-        model: :gpt4,
-        temperature: 0.7,
-        max_tokens: 1000,
-        token_counter: PromptVault.TokenCounter.Tiktoken,
-        compaction_strategy: {SummarizeHistory, [summarizer: summarizer]}
-      )
+      context =
+        PromptVault.new(
+          model: :gpt4,
+          temperature: 0.7,
+          max_tokens: 1000,
+          token_counter: PromptVault.TokenCounter.Tiktoken,
+          compaction_strategy: {SummarizeHistory, [summarizer: summarizer]}
+        )
 
       # Verify initial state
       assert context.model == :gpt4
@@ -28,17 +32,28 @@ defmodule PromptVaultIntegrationTest do
       assert context.token_count == 0
 
       # Step 2: Add various types of messages
-      {:ok, context} = PromptVault.add_message(context, :system, "You are a helpful AI assistant.")
+      {:ok, context} =
+        PromptVault.add_message(context, :system, "You are a helpful AI assistant.")
+
       {:ok, context} = PromptVault.add_message(context, :user, "What's the weather like?")
-      {:ok, context} = PromptVault.add_tool_call(context, :get_weather, %{location: "NYC"}, nil, 
-        raw: "Calling weather API...")
-      {:ok, context} = PromptVault.add_message(context, :assistant, "Let me check the weather for you.")
-      {:ok, context} = PromptVault.add_media(context, "image/jpeg", "weather_map.jpg", 
-        raw: "Weather map showing current conditions")
+
+      {:ok, context} =
+        PromptVault.add_tool_call(context, :get_weather, %{location: "NYC"}, nil,
+          raw: "Calling weather API..."
+        )
+
+      {:ok, context} =
+        PromptVault.add_message(context, :assistant, "Let me check the weather for you.")
+
+      {:ok, context} =
+        PromptVault.add_media(context, "image/jpeg", "weather_map.jpg",
+          raw: "Weather map showing current conditions"
+        )
 
       # Verify messages were added correctly
       assert length(context.messages) == 5
-      assert context.token_count == 0  # Should be reset after adding messages
+      # Should be reset after adding messages
+      assert context.token_count == 0
 
       # Step 3: Render the context
       rendered = PromptVault.render(context)
@@ -67,8 +82,10 @@ defmodule PromptVaultIntegrationTest do
       {:ok, compacted} = PromptVault.compact(context_with_tokens)
 
       # Verify compaction results
-      assert length(compacted.messages) == 2  # System message + summary
-      assert compacted.token_count == 0  # Reset after compaction
+      # System message + summary
+      assert length(compacted.messages) == 2
+      # Reset after compaction
+      assert compacted.token_count == 0
 
       [system_msg, summary_msg] = compacted.messages
       assert system_msg.role == :system
@@ -79,10 +96,12 @@ defmodule PromptVaultIntegrationTest do
       assert summary_msg.assigns == %{summary: true}
 
       # Step 7: Continue adding messages to compacted context
-      {:ok, final_context} = PromptVault.add_message(compacted, :user, "Thanks for the weather info!")
+      {:ok, final_context} =
+        PromptVault.add_message(compacted, :user, "Thanks for the weather info!")
 
       assert length(final_context.messages) == 3
-      assert final_context.token_count == 0  # Reset after adding message
+      # Reset after adding message
+      assert final_context.token_count == 0
 
       # Step 8: Render final context
       final_rendered = PromptVault.render(final_context)
@@ -91,7 +110,7 @@ defmodule PromptVaultIntegrationTest do
       assert String.contains?(final_text, "You are a helpful AI assistant.")
       assert String.contains?(final_text, "Summary: 1 user messages, 1 assistant messages")
       assert String.contains?(final_text, "Thanks for the weather info!")
-      
+
       # Should not contain original conversation details
       refute String.contains?(final_text, "What's the weather like?")
       refute String.contains?(final_text, "Calling weather API...")
@@ -111,7 +130,7 @@ defmodule PromptVaultIntegrationTest do
     end
 
     test "pipe-friendly API usage" do
-      result = 
+      result =
         PromptVault.new(
           token_counter: PromptVault.TokenCounter.Tiktoken,
           compaction_strategy: SummarizeHistory
@@ -128,26 +147,28 @@ defmodule PromptVaultIntegrationTest do
         end
 
       {:ok, final_context} = result
-      assert length(final_context.messages) == 2  # System + summary
+      # System + summary
+      assert length(final_context.messages) == 2
     end
 
     test "template integration when engine is provided" do
       context = PromptVault.new()
-      
+
       # Add message with EEx template
-      {:ok, context} = PromptVault.add_message(
-        context,
-        :user,
-        "Hello <%= assigns.name %>!",
-        engine: :eex,
-        template: {:inline, "Hello <%= assigns.name %>!"},
-        assigns: %{name: "World"}
-      )
+      {:ok, context} =
+        PromptVault.add_message(
+          context,
+          :user,
+          "Hello <%= assigns.name %>!",
+          engine: :eex,
+          template: {:inline, "Hello <%= assigns.name %>!"},
+          assigns: %{name: "World"}
+        )
 
       # Render should process the template
       rendered = PromptVault.render(context, %{name: "Alice"})
       rendered_text = IO.iodata_to_binary(rendered)
-      
+
       # The rendered result should use merged assigns (Alice overrides World)
       assert rendered_text == "Hello Alice!"
     end
@@ -156,19 +177,19 @@ defmodule PromptVaultIntegrationTest do
       context = PromptVault.new()
 
       # Invalid role
-      assert {:error, {:invalid_role, :invalid}} = 
-        PromptVault.add_message(context, :invalid, "test")
+      assert {:error, {:invalid_role, :invalid}} =
+               PromptVault.add_message(context, :invalid, "test")
 
       # Invalid tool args
-      assert {:error, {:invalid_args, "not a map"}} = 
-        PromptVault.add_tool_call(context, :tool, "not a map", nil)
+      assert {:error, {:invalid_args, "not a map"}} =
+               PromptVault.add_tool_call(context, :tool, "not a map", nil)
 
       # Invalid media types
-      assert {:error, {:invalid_mime_type, 123}} = 
-        PromptVault.add_media(context, 123, "url")
+      assert {:error, {:invalid_mime_type, 123}} =
+               PromptVault.add_media(context, 123, "url")
 
-      assert {:error, {:invalid_url, 456}} = 
-        PromptVault.add_media(context, "image/jpeg", 456)
+      assert {:error, {:invalid_url, 456}} =
+               PromptVault.add_media(context, "image/jpeg", 456)
     end
   end
 end

@@ -15,13 +15,12 @@ defmodule PromptVault.Message.ToolCallMessageTest do
       assert message.template == nil
       assert message.engine == nil
       assert message.assigns == %{}
-
     end
 
     test "creates with all fields" do
       schema = %{type: "object", properties: %{temp: %{type: "number"}}}
       assigns = %{location: "NYC"}
-      
+
       message = %ToolCallMessage{
         tool: "get_weather",
         args: %{city: "New York", units: "celsius"},
@@ -29,8 +28,7 @@ defmodule PromptVault.Message.ToolCallMessageTest do
         raw: "Getting weather for NYC",
         template: {:inline, "Weather: {{temp}}°C"},
         engine: :eex,
-        assigns: assigns,
-
+        assigns: assigns
       }
 
       assert message.tool == "get_weather"
@@ -40,7 +38,6 @@ defmodule PromptVault.Message.ToolCallMessageTest do
       assert message.template == {:inline, "Weather: {{temp}}°C"}
       assert message.engine == :eex
       assert message.assigns == assigns
-
     end
 
     test "enforces required keys" do
@@ -90,8 +87,9 @@ defmodule PromptVault.Message.ToolCallMessageTest do
         args: %{},
         template: {:inline, "Calling {{tool}}"}
       }
-      
-      assert ToolCallMessage.rendered(message, %{tool: "weather"}) == {:error, {:unknown_engine, nil}}
+
+      assert ToolCallMessage.rendered(message, %{tool: "weather"}) ==
+               {:error, {:unknown_engine, nil}}
     end
   end
 
@@ -112,7 +110,7 @@ defmodule PromptVault.Message.ToolCallMessageTest do
         options: %{units: "metric", lang: "en"},
         callbacks: ["on_success", "on_error"]
       }
-      
+
       message = %ToolCallMessage{tool: :weather, args: complex_args}
       assert message.args == complex_args
     end

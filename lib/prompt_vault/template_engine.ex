@@ -16,5 +16,6 @@ defmodule PromptVault.TemplateEngine do
   - `{:file, path}` - Template file path
   - `{:module, module}` - Module with render/1 function
   """
-  @callback render(template_source :: any, assigns :: map) :: {:ok, iodata} | {:error, reason :: any}
+  @callback render(template_source :: any, assigns :: map) ::
+              {:ok, iodata} | {:error, reason :: any}
 end
