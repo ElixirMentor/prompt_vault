@@ -112,7 +112,7 @@ defmodule PromptVault.MixProject do
           PromptVault.Message.ToolCallMessage
         ],
         "Template Engines": [
-          PromptVault.TemplateEngine.EexEngine,
+          PromptVault.TemplateEngine.EExEngine,
           PromptVault.TemplateEngine.LiquidEngine
         ],
         "Token Counters": [
@@ -127,6 +127,9 @@ defmodule PromptVault.MixProject do
 
   defp aliases do
     [
+      # Generate docs
+      docs: "docs -f html --open",
+
       # Run to check the quality of your code
       q: ["quality"],
       quality: [
