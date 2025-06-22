@@ -37,8 +37,10 @@ jobs:
       - name: Check formatting
         run: mix format --check-formatted
 
-      - name: Run tests
-        run: mix test
+      - name: Run tests with coverage
+        run: mix coveralls.github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Credo
         run: mix credo --strict
