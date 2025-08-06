@@ -15,6 +15,7 @@ PromptVault provides an immutable, token-aware context management system that he
 - **Message Types**: Support for text, tool calls, and media messages
 - **Compaction Strategies**: Automatic context compaction when approaching token limits
 - **Type Safety**: Full Elixir typespecs and documentation
+- **LangChain Integration**: Seamless integration with Elixir LangChain
 
 ## Installation
 
@@ -24,8 +25,8 @@ Add `prompt_vault` to your list of dependencies in `mix.exs`:
 def deps do
   [
     {:prompt_vault, "~> 0.1.0"},
-    # Optional: For accurate OpenAI token counting
-    {:tiktoken, "~> 0.4.1"}
+    {:tiktoken, "~> 0.4.1"}, # Optional: For accurate OpenAI token counting
+    {:langchain, "~> 0.3.0"}  # Optional: For LangChain integration
   ]
 end
 ```
@@ -128,6 +129,37 @@ context = PromptVault.new(
 
 {:ok, compacted_context} = PromptVault.compact(context)
 ```
+
+### LangChain Integration
+
+PromptVault integrates seamlessly with Elixir LangChain through the **Enumerable protocol** - pass contexts directly to LangChain functions without any conversion:
+
+```elixir
+# Create context with PromptVault
+context = 
+  PromptVault.new()
+  |> PromptVault.add_message!(:system, "You are a helpful assistant")
+  |> PromptVault.add_message!(:user, "What is the capital of France?")
+
+# Pass context directly to LangChain - no conversion needed!
+llm = LangChain.ChatModels.ChatOpenAI.new!()
+
+chain = 
+  LangChain.Chains.LLMChain.new!(%{llm: llm})
+  |> LangChain.Chains.LLMChain.add_messages(context)  # Context used directly!
+  |> LangChain.Chains.LLMChain.run()
+
+response = LangChain.Utils.ChainResult.to_string!(chain)
+```
+
+**Key Benefits:**
+- **Direct Usage**: No wrapper functions or manual conversion required
+- **Type Safety**: Automatic conversion to LangChain.Message structs during enumeration
+- **All Message Types**: Supports text, media, and tool call messages
+- **Error Handling**: Gracefully handles unsupported message types
+- **Standard Enum Functions**: Works with `Enum.map/2`, `Enum.filter/2`, etc.
+
+See [LangChain Integration Guide](docs/langchain_integration.md) for detailed examples and advanced usage patterns.
 
 ## Configuration
 

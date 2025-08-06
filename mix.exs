@@ -53,6 +53,7 @@ defmodule PromptVault.MixProject do
       {:solid, "~> 0.15", optional: true},
       {:fnord, "~> 0.3"},
       {:tiktoken, "~> 0.4.1"},
+      {:langchain, "~> 0.3.0", optional: true},
 
       # Development & Test Dependencies
       {:credo, "~> 1.7", only: [:dev, :test]},
@@ -106,6 +107,10 @@ defmodule PromptVault.MixProject do
           PromptVault.Compaction,
           PromptVault.TemplateEngine,
           PromptVault.TokenCounter
+        ],
+        Integrations: [
+          PromptVault.LangChain,
+          PromptVault.Context.Enumerable
         ],
         "Message Types": [
           PromptVault.Message.PromptMessage,
