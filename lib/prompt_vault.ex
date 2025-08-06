@@ -127,6 +127,27 @@ defmodule PromptVault do
   end
 
   @doc """
+  Adds a message to the context, raising on error.
+
+  Same as `add_message/4` but raises on error instead of returning an error tuple.
+
+  ## Examples
+
+      iex> context = PromptVault.new()
+      iex> updated = PromptVault.add_message!(context, :user, "Hello")
+      iex> length(updated.messages)
+      1
+
+  """
+  @spec add_message!(Context.t(), atom(), any(), keyword()) :: Context.t()
+  def add_message!(context, role, raw, opts \\ []) do
+    case add_message(context, role, raw, opts) do
+      {:ok, updated_context} -> updated_context
+      {:error, reason} -> raise "Failed to add message: #{inspect(reason)}"
+    end
+  end
+
+  @doc """
   Adds a tool call message to the context.
 
   ## Parameters

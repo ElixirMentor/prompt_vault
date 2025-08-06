@@ -106,6 +106,114 @@ defmodule PromptVault.Message.MediaMessageTest do
       assert MediaMessage.rendered(message, %{description: "test"}) ==
                {:error, {:unknown_engine, nil}}
     end
+
+    test "rendered/2 with EEx template engine" do
+      message = %MediaMessage{
+        mime_type: "image/jpeg",
+        url: "test.jpg",
+        template: {:inline, "Image: <%= @description %>"},
+        engine: :eex,
+        assigns: %{quality: "high"}
+      }
+
+      result = MediaMessage.rendered(message, %{description: "A beautiful sunset"})
+      assert result == "Image: A beautiful sunset"
+    end
+
+    test "rendered/2 with Liquid template engine" do
+      message = %MediaMessage{
+        mime_type: "image/jpeg",
+        url: "test.jpg",
+        template: {:inline, "Image: {{ description }}"},
+        engine: :liquid,
+        assigns: %{quality: "high"}
+      }
+
+      result = MediaMessage.rendered(message, %{description: "A mountain view"})
+      assert result == "Image: A mountain view"
+    end
+
+    test "rendered/2 with custom engine module" do
+      defmodule MockEngine do
+        def render({:inline, template}, assigns) do
+          {:ok, "Rendered: #{template} with #{inspect(assigns)}"}
+        end
+      end
+
+      message = %MediaMessage{
+        mime_type: "image/jpeg",
+        url: "test.jpg",
+        template: {:inline, "test template"},
+        engine: MockEngine
+      }
+
+      result = MediaMessage.rendered(message, %{test: "value"})
+      assert result == "Rendered: test template with %{test: \"value\"}"
+    end
+
+    test "rendered/2 handles template engine errors" do
+      message = %MediaMessage{
+        mime_type: "image/jpeg",
+        url: "test.jpg",
+        template: {:inline, "Image: <%= @undefined_var %>"},
+        engine: :eex
+      }
+
+      # EEx will render but show warning for undefined variable
+      result = MediaMessage.rendered(message, %{})
+      assert result == "Image: "
+    end
+
+    test "rendered/2 with unknown engine atom" do
+      message = %MediaMessage{
+        mime_type: "image/jpeg",
+        url: "test.jpg",
+        template: {:inline, "test"},
+        engine: :unknown_engine
+      }
+
+      # When engine is an atom that doesn't exist as module, it tries to call the function
+      assert_raise UndefinedFunctionError, fn ->
+        MediaMessage.rendered(message, %{})
+      end
+    end
+
+    test "rendered/2 with invalid engine type" do
+      message = %MediaMessage{
+        mime_type: "image/jpeg",
+        url: "test.jpg",
+        template: {:inline, "test"},
+        engine: "invalid"
+      }
+
+      assert MediaMessage.rendered(message, %{}) == {:error, {:unknown_engine, "invalid"}}
+    end
+
+    test "rendered/2 merges message assigns with passed assigns" do
+      message = %MediaMessage{
+        mime_type: "image/jpeg",
+        url: "test.jpg",
+        template: {:inline, "Image: <%= @description %> Quality: <%= @quality %>"},
+        engine: :eex,
+        assigns: %{quality: "high"}
+      }
+
+      result = MediaMessage.rendered(message, %{description: "sunset"})
+      assert result == "Image: sunset Quality: high"
+    end
+
+    test "rendered/2 passed assigns override message assigns" do
+      message = %MediaMessage{
+        mime_type: "image/jpeg",
+        url: "test.jpg",
+        template: {:inline, "Quality: <%= @quality %>"},
+        engine: :eex,
+        assigns: %{quality: "low"}
+      }
+
+      result = MediaMessage.rendered(message, %{quality: "high"})
+      assert result == "Quality: high"
+    end
   end
 
   describe "media types and URLs" do
