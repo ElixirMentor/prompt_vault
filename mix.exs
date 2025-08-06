@@ -52,6 +52,7 @@ defmodule PromptVault.MixProject do
     [
       {:solid, "~> 0.15", optional: true},
       {:fnord, "~> 0.3"},
+      {:tiktoken, "~> 0.4.1"},
 
       # Development & Test Dependencies
       {:credo, "~> 1.7", only: [:dev, :test]},
@@ -116,7 +117,8 @@ defmodule PromptVault.MixProject do
           PromptVault.TemplateEngine.LiquidEngine
         ],
         "Token Counters": [
-          PromptVault.TokenCounter.PretendTokenizer
+          PromptVault.TokenCounter.PretendTokenizer,
+          PromptVault.TokenCounter.TiktokenTokenizer
         ],
         Compaction: [
           PromptVault.Compaction.SummarizeHistory
