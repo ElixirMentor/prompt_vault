@@ -53,8 +53,12 @@ defmodule PromptVault.Context.Enumerable do
     end
 
     def reduce(%Context{messages: messages}, acc, fun) do
-      converted_messages = convert_messages(messages)
-      Enumerable.List.reduce(converted_messages, acc, fun)
+      Enum.reduce_while(messages, acc, fn message, acc ->
+        case convert_message(message) do
+          nil -> {:cont, acc}
+          converted -> fun.(converted, acc)
+        end
+      end)
     end
 
     # Private function to convert PromptVault messages to LangChain messages
