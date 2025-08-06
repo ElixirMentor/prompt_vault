@@ -7,15 +7,15 @@ defmodule PromptVault.Context.Enumerable do
 
   ## Example
 
-      context = 
+      context =
         PromptVault.new()
         |> PromptVault.add_message!(:system, "You are helpful")
         |> PromptVault.add_message!(:user, "Hello!")
 
       # Pass context directly to LangChain
       llm = LangChain.ChatModels.ChatOpenAI.new!()
-      
-      chain = 
+
+      chain =
         LangChain.Chains.LLMChain.new!(%{llm: llm})
         |> LangChain.Chains.LLMChain.add_messages(context)  # Context used directly!
 
@@ -53,12 +53,8 @@ defmodule PromptVault.Context.Enumerable do
     end
 
     def reduce(%Context{messages: messages}, acc, fun) do
-      Enum.reduce_while(messages, acc, fn message, acc ->
-        case convert_message(message) do
-          nil -> {:cont, acc}
-          converted -> fun.(converted, acc)
-        end
-      end)
+      converted_messages = convert_messages(messages)
+      Enumerable.List.reduce(converted_messages, acc, fun)
     end
 
     # Private function to convert PromptVault messages to LangChain messages
@@ -69,41 +65,49 @@ defmodule PromptVault.Context.Enumerable do
     end
 
     defp convert_message(%PromptMessage{} = message) do
-      content = message.__struct__.rendered(message, %{}) |> IO.iodata_to_binary()
+      if Code.ensure_loaded?(LangChain.Message) do
+        content = message.__struct__.rendered(message, %{}) |> IO.iodata_to_binary()
 
-      try do
-        case message.role do
-          :system -> LangChain.Message.new_system!(content)
-          :user -> LangChain.Message.new_user!(content)
-          :assistant -> LangChain.Message.new_assistant!(content)
+        try do
+          case message.role do
+            :system -> LangChain.Message.new_system!(content)
+            :user -> LangChain.Message.new_user!(content)
+            :assistant -> LangChain.Message.new_assistant!(content)
+            _ -> nil
+          end
+        rescue
           _ -> nil
         end
-      rescue
-        _ -> nil
+      else
+        nil
       end
     end
 
     defp convert_message(%ToolCallMessage{} = message) do
-      # Tool call messages are more complex and may need special handling
-      # For now, convert to assistant message with tool call information
-      content = message.__struct__.rendered(message, %{}) |> IO.iodata_to_binary()
+      if Code.ensure_loaded?(LangChain.Message) do
+        content = message.__struct__.rendered(message, %{}) |> IO.iodata_to_binary()
 
-      try do
-        LangChain.Message.new_assistant!(content)
-      rescue
-        _ -> nil
+        try do
+          LangChain.Message.new_assistant!(content)
+        rescue
+          _ -> nil
+        end
+      else
+        nil
       end
     end
 
     defp convert_message(%MediaMessage{} = message) do
-      # Media messages need special handling for multimodal models
-      # For now, convert to user message with media information
-      content = message.__struct__.rendered(message, %{}) |> IO.iodata_to_binary()
+      if Code.ensure_loaded?(LangChain.Message) do
+        content = message.__struct__.rendered(message, %{}) |> IO.iodata_to_binary()
 
-      try do
-        LangChain.Message.new_user!(content)
-      rescue
-        _ -> nil
+        try do
+          LangChain.Message.new_user!(content)
+        rescue
+          _ -> nil
+        end
+      else
+        nil
       end
     end
 
