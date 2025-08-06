@@ -22,7 +22,7 @@ defmodule PromptVault.Context.Enumerable do
   """
 
   alias PromptVault.Context
-  alias PromptVault.Message.{PromptMessage, ToolCallMessage, MediaMessage}
+  alias PromptVault.Message.{MediaMessage, PromptMessage, ToolCallMessage}
 
   defimpl Enumerable, for: Context do
     @doc """
@@ -69,9 +69,9 @@ defmodule PromptVault.Context.Enumerable do
 
       try do
         case message.role do
-          :system -> apply(LangChain.Message, :new_system!, [content])
-          :user -> apply(LangChain.Message, :new_user!, [content])
-          :assistant -> apply(LangChain.Message, :new_assistant!, [content])
+          :system -> LangChain.Message.new_system!(content)
+          :user -> LangChain.Message.new_user!(content)
+          :assistant -> LangChain.Message.new_assistant!(content)
           _ -> nil
         end
       rescue
@@ -85,7 +85,7 @@ defmodule PromptVault.Context.Enumerable do
       content = message.__struct__.rendered(message, %{}) |> IO.iodata_to_binary()
 
       try do
-        apply(LangChain.Message, :new_assistant!, [content])
+        LangChain.Message.new_assistant!(content)
       rescue
         _ -> nil
       end
@@ -97,7 +97,7 @@ defmodule PromptVault.Context.Enumerable do
       content = message.__struct__.rendered(message, %{}) |> IO.iodata_to_binary()
 
       try do
-        apply(LangChain.Message, :new_user!, [content])
+        LangChain.Message.new_user!(content)
       rescue
         _ -> nil
       end

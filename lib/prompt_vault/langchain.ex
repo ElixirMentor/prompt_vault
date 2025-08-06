@@ -69,31 +69,29 @@ defmodule PromptVault.LangChain do
   @spec convert_from_langchain_message(any()) ::
           {:ok, PromptMessage.t()} | {:error, any()}
   defp convert_from_langchain_message(message) do
-    try do
-      # Only process if it's a map with required fields
-      if is_map(message) and Map.has_key?(message, :role) and Map.has_key?(message, :content) do
-        role =
-          case Map.get(message, :role) do
-            :system -> :system
-            :user -> :user
-            :assistant -> :assistant
-            _ -> :user
-          end
+    # Only process if it's a map with required fields
+    if is_map(message) and Map.has_key?(message, :role) and Map.has_key?(message, :content) do
+      role =
+        case Map.get(message, :role) do
+          :system -> :system
+          :user -> :user
+          :assistant -> :assistant
+          _ -> :user
+        end
 
-        prompt_message = %PromptMessage{
-          role: role,
-          raw: Map.get(message, :content, ""),
-          template: nil,
-          engine: nil,
-          assigns: %{}
-        }
+      prompt_message = %PromptMessage{
+        role: role,
+        raw: Map.get(message, :content, ""),
+        template: nil,
+        engine: nil,
+        assigns: %{}
+      }
 
-        {:ok, prompt_message}
-      else
-        {:error, :invalid_message}
-      end
-    rescue
-      _ -> {:error, :invalid_message}
+      {:ok, prompt_message}
+    else
+      {:error, :invalid_message}
     end
+  rescue
+    _ -> {:error, :invalid_message}
   end
 end

@@ -116,8 +116,8 @@ defmodule PromptVault.LangChainTest do
 
       # This is how it would work with actual LangChain:
       # llm = LangChain.ChatModels.ChatOpenAI.new!()
-      # 
-      # chain = 
+      #
+      # chain =
       #   LangChain.Chains.LLMChain.new!(%{llm: llm})
       #   |> LangChain.Chains.LLMChain.add_messages(context)  # Context used directly!
       #   |> LangChain.Chains.LLMChain.run()
