@@ -33,7 +33,6 @@ defmodule PromptVault.TokenCounter.TiktokenTokenizer do
     |> count_tokens(normalize_model(model))
   end
 
-  # Normalize content to binary format
   defp normalize_content(content) when is_binary(content), do: content
 
   defp normalize_content(content) when is_list(content) do
@@ -42,7 +41,6 @@ defmodule PromptVault.TokenCounter.TiktokenTokenizer do
 
   defp normalize_content(_content), do: ""
 
-  # Normalize model name to string format expected by tiktoken
   defp normalize_model(model) when is_atom(model) do
     model
     |> Atom.to_string()
@@ -51,7 +49,6 @@ defmodule PromptVault.TokenCounter.TiktokenTokenizer do
 
   defp normalize_model(model) when is_binary(model), do: model
 
-  # Count tokens using tiktoken
   defp count_tokens(content, model) do
     case Tiktoken.encode_ordinary(model, content) do
       {:ok, tokens} -> length(tokens)
