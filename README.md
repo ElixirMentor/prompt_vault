@@ -23,19 +23,23 @@ Add `prompt_vault` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:prompt_vault, "~> 0.1.0"}
+    {:prompt_vault, "~> 0.1.0"},
+    # Optional: For accurate OpenAI token counting
+    {:tiktoken, "~> 0.4.1"}
   ]
 end
 ```
+
+The `tiktoken` dependency is optional and only needed if you want to use the `TiktokenTokenizer` for precise OpenAI token counting.
 
 ## Quick Start
 
 ```elixir
 # Create a new context
 context = PromptVault.new(
-  model: :gpt4,
+  model: "gpt-4",
   temperature: 0.7,
-  token_counter: PromptVault.TokenCounter.PretendTokenizer
+  token_counter: PromptVault.TokenCounter.TiktokenTokenizer
 )
 
 # Add messages
@@ -91,6 +95,27 @@ Use templates with assigns for dynamic content:
 )
 ```
 
+### Token Counting
+
+PromptVault supports multiple tokenizers for accurate token counting:
+
+**PretendTokenizer** (default, estimation-based):
+```elixir
+context = PromptVault.new(
+  token_counter: PromptVault.TokenCounter.PretendTokenizer
+)
+```
+
+**TiktokenTokenizer** (accurate, using OpenAI's tiktoken):
+```elixir
+context = PromptVault.new(
+  model: "gpt-4",
+  token_counter: PromptVault.TokenCounter.TiktokenTokenizer
+)
+```
+
+The TiktokenTokenizer supports all major OpenAI models including GPT-4, GPT-3.5-turbo, and text-davinci models. It provides precise token counts that match OpenAI's billing.
+
 ### Context Compaction
 
 Automatically compact context when approaching token limits:
@@ -98,7 +123,7 @@ Automatically compact context when approaching token limits:
 ```elixir
 context = PromptVault.new(
   compaction_strategy: PromptVault.Compaction.SummarizeHistory,
-  token_counter: PromptVault.TokenCounter.PretendTokenizer
+  token_counter: PromptVault.TokenCounter.TiktokenTokenizer
 )
 
 {:ok, compacted_context} = PromptVault.compact(context)
